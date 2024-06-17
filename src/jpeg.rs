@@ -327,7 +327,7 @@ impl Jpeg {
 #[cfg(test)]
 mod test {
     use super::*;
-    use smallvec::smallvec;
+    
 
     #[test]
     fn test_parse_dc_huffman_table() {

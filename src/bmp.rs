@@ -52,7 +52,7 @@ pub fn read_bmp(bmp: &[u8]) -> Vec<u8> {
 
     let width = u16::from_le_bytes((bmp[16], bmp[17]).into()) as usize;
     let height = u16::from_le_bytes((bmp[18], bmp[19]).into()) as usize;
-    let mut bgr = Vec::with_capacity(width * height);
+    let bgr = Vec::with_capacity(width * height);
 
     // for i in (0..height).rev() {
     //     let start = (i * width * 3) as usize;

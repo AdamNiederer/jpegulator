@@ -27,6 +27,8 @@ struct Cli {
     output_cb: Option<PathBuf>,
     #[arg(long)]
     output_cr: Option<PathBuf>,
+    #[arg(long)]
+    show_phases: bool,
 }
 
 fn main() -> Result<(), anyhow::Error> {
@@ -37,7 +39,7 @@ fn main() -> Result<(), anyhow::Error> {
     if !args.decode && extension != "jpg" && extension != "jpeg" && extension != "jfif" {
         std::fs::write(args.file.with_extension("jpg"), encode(input)?).unwrap();
     } else {
-        std::fs::write(args.file.with_extension("bmp"), decode(input)?).unwrap();
+        std::fs::write(args.file.with_extension("bmp"), decode(input, args.show_phases)?).unwrap();
     }
 
     Ok(())

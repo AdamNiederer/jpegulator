@@ -425,7 +425,7 @@ pub(crate) fn serialize<T>(
     return ret;
 }
 
-pub fn decode(input: Vec<u8>) -> Result<Vec<u8>, anyhow::Error> {
+pub fn decode(input: Vec<u8>, show_phases: bool) -> Result<Vec<u8>, anyhow::Error> {
     let jpeg = Jpeg::from_slice(&input)?;
 
     let mut huffman_decoded = huffman_decode(
@@ -444,27 +444,19 @@ pub fn decode(input: Vec<u8>) -> Result<Vec<u8>, anyhow::Error> {
 
     let rgb = ycbcr_to_rgb(&ycbcr, &jpeg.channels, &jpeg.channel_order);
 
-    // let serialized = serialize(&ycbcr, &jpeg.channels, &jpeg.channel_order, jpeg.height, jpeg.width)
-    //     .into_iter().map(|x| x as u8).collect::<Vec<u8>>();
+    if show_phases {
+        let serialized = serialize(&huffman_decoded, &jpeg.channels, &jpeg.channel_order, jpeg.height, jpeg.width, true)
+            .into_iter().map(|x| x as u8).collect::<Vec<u8>>();
+        let bmp = write_bmp(&serialized, jpeg.width as u32, jpeg.height as u32);
+        std::fs::write("test2-sm.coefficients.bmp", bmp).unwrap();
+    }
 
-    // let filename = args.file.unwrap_or(PathBuf::from("cat.raw"));
-    // let input = std::fs::read(filename.clone()).unwrap();
-
-    // let bmp = write_bmp(&input, 680, 453);
-
-    // {
-    //     let serialized = serialize(&huffman_decoded, &jpeg.channels, &jpeg.channel_order, jpeg.height, jpeg.width)
-    //         .into_iter().map(|x| x as u8).collect::<Vec<u8>>();
-    //     let bmp = write_bmp(&serialized, jpeg.width as u32, jpeg.height as u32);
-    //     std::fs::write("test4-p1.bmp", bmp).unwrap();
-    // }
-
-    // {
-    //     let serialized = serialize(&ycbcr, &jpeg.channels, &jpeg.channel_order, jpeg.height, jpeg.width, true)
-    //         .into_iter().map(|x| x as u8).collect::<Vec<u8>>();
-    //     let bmp = write_bmp(&serialized, jpeg.width as u32, jpeg.height as u32);
-    //     std::fs::write("test4-p2.bmp", bmp).unwrap();
-    // }
+    if show_phases {
+        let serialized = serialize(&ycbcr, &jpeg.channels, &jpeg.channel_order, jpeg.height, jpeg.width, true)
+            .into_iter().map(|x| x as u8).collect::<Vec<u8>>();
+        let bmp = write_bmp(&serialized, jpeg.width as u32, jpeg.height as u32);
+        std::fs::write("test2-sm.ycbcr.bmp", bmp).unwrap();
+    }
 
     {
         let serialized = serialize(&rgb, &jpeg.channels, &jpeg.channel_order, jpeg.height, jpeg.width, false)
