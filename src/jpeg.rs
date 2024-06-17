@@ -77,6 +77,13 @@ pub struct ScanChannel {
     pub dc_huffman_table_id: HuffmanTableID,
 }
 
+#[derive(Debug)]
+pub struct Decode {
+    pub coefficients: Vec<u8>,
+    pub ycbcr: Vec<u8>,
+    pub rgb: Vec<u8>,
+}
+
 pub type CoefficientMCU = HashMap<u8, Vec<i16>>;
 pub type ValueMCU = HashMap<u8, Vec<i8>>;
 pub type RGBMCU = HashMap<u8, Vec<u8>>;
@@ -327,7 +334,7 @@ impl Jpeg {
 #[cfg(test)]
 mod test {
     use super::*;
-    
+
 
     #[test]
     fn test_parse_dc_huffman_table() {

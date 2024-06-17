@@ -1,5 +1,5 @@
 [package]
-name = "toy-jpg"
+name = "jpegulator"
 version = "0.1.0"
 edition = "2021"
 

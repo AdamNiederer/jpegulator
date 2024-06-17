@@ -3,7 +3,7 @@ use anyhow::anyhow;
 use bitvec::prelude::*;
 use crate::jpeg::{ValueMCU, RGBMCU, ScanChannel};
 use crate::constants::{MCU_ORDER, m1, m2, m3, m4, m5, s0, s1, s2, s3, s4, s5, s6, s7};
-use crate::jpeg::{Jpeg, HuffmanTable, FrameChannel, HuffmanTableID, CoefficientMCU};
+use crate::jpeg::{Jpeg, HuffmanTable, FrameChannel, HuffmanTableID, CoefficientMCU, Decode};
 use crate::bmp::write_bmp;
 
 fn next_sym(bitstream: &BitSlice<u8, Msb0>, table: &HuffmanTable) -> Result<(usize, u8), anyhow::Error> {
@@ -425,7 +425,7 @@ pub(crate) fn serialize<T>(
     return ret;
 }
 
-pub fn decode(input: Vec<u8>, show_phases: bool) -> Result<Vec<u8>, anyhow::Error> {
+pub fn decode(input: Vec<u8>) -> Result<Decode, anyhow::Error> {
     let jpeg = Jpeg::from_slice(&input)?;
 
     let mut huffman_decoded = huffman_decode(
@@ -441,29 +441,25 @@ pub fn decode(input: Vec<u8>, show_phases: bool) -> Result<Vec<u8>, anyhow::Erro
         let dequantized = dequantize(mcu, &jpeg.quant_tables, &jpeg.channels).unwrap();
         inverse_dct(&dequantized, &jpeg.channels, &jpeg.channel_order).unwrap()
     }).collect::<Vec<ValueMCU>>();
-
     let rgb = ycbcr_to_rgb(&ycbcr, &jpeg.channels, &jpeg.channel_order);
 
-    if show_phases {
-        let serialized = serialize(&huffman_decoded, &jpeg.channels, &jpeg.channel_order, jpeg.height, jpeg.width, true)
-            .into_iter().map(|x| x as u8).collect::<Vec<u8>>();
-        let bmp = write_bmp(&serialized, jpeg.width as u32, jpeg.height as u32);
-        std::fs::write("test2-sm.coefficients.bmp", bmp).unwrap();
-    }
-
-    if show_phases {
-        let serialized = serialize(&ycbcr, &jpeg.channels, &jpeg.channel_order, jpeg.height, jpeg.width, true)
-            .into_iter().map(|x| x as u8).collect::<Vec<u8>>();
-        let bmp = write_bmp(&serialized, jpeg.width as u32, jpeg.height as u32);
-        std::fs::write("test2-sm.ycbcr.bmp", bmp).unwrap();
-    }
-
-    {
-        let serialized = serialize(&rgb, &jpeg.channels, &jpeg.channel_order, jpeg.height, jpeg.width, false)
-            .into_iter().map(|x| x as u8).collect::<Vec<u8>>();
-        let bmp = write_bmp(&serialized, jpeg.width as u32, jpeg.height as u32);
-        return Ok(bmp);
-    }
+    return Ok(Decode {
+        coefficients: {
+            let serialized = serialize(&huffman_decoded, &jpeg.channels, &jpeg.channel_order, jpeg.height, jpeg.width, true)
+                .into_iter().map(|x| x as u8).collect::<Vec<u8>>();
+            write_bmp(&serialized, jpeg.width as u32, jpeg.height as u32)
+        },
+        ycbcr: {
+            let serialized = serialize(&ycbcr, &jpeg.channels, &jpeg.channel_order, jpeg.height, jpeg.width, true)
+                .into_iter().map(|x| x as u8).collect::<Vec<u8>>();
+            write_bmp(&serialized, jpeg.width as u32, jpeg.height as u32)
+        },
+        rgb: {
+            let serialized = serialize(&rgb, &jpeg.channels, &jpeg.channel_order, jpeg.height, jpeg.width, false)
+                .into_iter().map(|x| x as u8).collect::<Vec<u8>>();
+            write_bmp(&serialized, jpeg.width as u32, jpeg.height as u32)
+        },
+    });
 }
 
 #[cfg(test)]

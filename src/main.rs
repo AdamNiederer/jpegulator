@@ -39,7 +39,12 @@ fn main() -> Result<(), anyhow::Error> {
     if !args.decode && extension != "jpg" && extension != "jpeg" && extension != "jfif" {
         std::fs::write(args.file.with_extension("jpg"), encode(input)?).unwrap();
     } else {
-        std::fs::write(args.file.with_extension("bmp"), decode(input, args.show_phases)?).unwrap();
+        let dec = decode(input)?;
+        std::fs::write(args.file.with_extension("bmp"), dec.rgb).unwrap();
+        if true {
+            std::fs::write(args.file.with_extension("ycbcr.bmp"), dec.ycbcr).unwrap();
+            std::fs::write(args.file.with_extension("coefficients.bmp"), dec.coefficients).unwrap();
+        }
     }
 
     Ok(())
